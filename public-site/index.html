@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shortic — Static URL Shortener</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1 class="logo">shortic</h1>
+    <p class="tagline">Tautan pendek, cepat, dan tanpa server.</p>
+
+    <div id="state-loading" class="state hidden">
+      <p>Mengalihkan…</p>
+    </div>
+
+    <div id="state-error" class="state hidden">
+      <h2>Link tidak ditemukan</h2>
+      <p>Tautan pendek yang kamu buka tidak valid atau sudah dihapus.</p>
+      <a class="btn" href="./">Kembali ke beranda</a>
+    </div>
+
+    <div id="state-landing" class="state">
+      <p>Buka tautan pendek seperti <code>contoh.com/#abc123</code> untuk dialihkan.</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

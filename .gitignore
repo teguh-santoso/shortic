@@ -1,0 +1,10 @@
+# Sensitive / internal
+plan.md
+.env
+.env.local
+*.local
+
+# Build artifacts
+node_modules/
+dist/
+build/

@@ -1,0 +1,96 @@
+-- ============================================================
+-- shortic — Supabase schema
+-- Run this in the Supabase SQL Editor (as postgres/service role).
+-- ============================================================
+
+-- ---------- Tabel: links ----------
+create table if not exists public.links (
+  id          uuid primary key default gen_random_uuid(),
+  code        text not null unique,
+  target_url  text not null,
+  owner_id    uuid not null references auth.users (id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  click_count integer not null default 0
+);
+
+comment on table public.links is 'Short codes -> target URLs. Only accessible via RPC get_link_by_code for anon.';
+
+-- ---------- Tabel: profiles ----------
+create table if not exists public.profiles (
+  id         uuid primary key references auth.users (id) on delete cascade,
+  role       text not null default 'user' check (role in ('user', 'admin')),
+  email      text not null unique,
+  created_at timestamptz not null default now()
+);
+
+-- ---------- Tabel: allowed_emails (allowlist Google OAuth) ----------
+create table if not exists public.allowed_emails (
+  email    text primary key,
+  role     text not null default 'user' check (role in ('user', 'admin')),
+  added_at timestamptz not null default now()
+);
+
+-- ---------- Trigger: enforce allowlist on signup ----------
+-- Menjalankan untuk setiap insert ke auth.users (signup baru via Google OAuth).
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  allowed_role text;
+begin
+  select role into allowed_role
+    from public.allowed_emails
+   where email = lower(new.email);
+
+  if allowed_role is not null then
+    insert into public.profiles (id, role, email)
+    values (new.id, allowed_role, lower(new.email))
+    on conflict (id) do nothing;
+  else
+    -- Email tidak ada di allowlist -> hapus user supaya session invalid.
+    delete from auth.users where id = new.id;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- ---------- RPC: get_link_by_code ----------
+-- Satu-satunya jalan anon client membaca tabel links (anti enumerasi).
+create or replace function public.get_link_by_code(p_code text)
+returns table (
+  id uuid,
+  code text,
+  target_url text,
+  click_count integer
+)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select l.id, l.code, l.target_url, l.click_count
+    from public.links l
+   where l.code = p_code
+   limit 1;
+$$;
+
+-- Increment hit counter (dipanggil dari frontend setelah redirect).
+create or replace function public.increment_click_count(p_code text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.links
+     set click_count = click_count + 1
+   where code = p_code;
+$$;

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shortic Admin — Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <span class="logo">shortic<span class="logo-sub">admin</span></span>
+    <div class="topbar-right">
+      <span id="user-email" class="user-email"></span>
+      <span id="user-role" class="badge"></span>
+      <button id="logout-btn" class="btn btn-sm">Keluar</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="denied-box" class="card hidden">
+      <h2>Email tidak terdaftar</h2>
+      <p>Akun kamu tidak ada di daftar izin (allowlist). Hubungi admin untuk didaftarkan.</p>
+      <button id="denied-logout" class="btn btn-danger">Keluar</button>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="card">
+        <h2>Tambah Link</h2>
+        <form id="create-form">
+          <label for="target-url">URL tujuan</label>
+          <input id="target-url" type="url" required placeholder="https://contoh-tujuan.com/panjang/..." />
+          <div class="row">
+            <div class="field">
+              <label for="custom-code">Kode pendek (opsional, 6+ karakter)</label>
+              <input id="custom-code" type="text" minlength="6" placeholder="acak otomatis jika kosong" />
+            </div>
+            <button type="button" id="generate-btn" class="btn btn-sm" title="Generate kode acak">Acak</button>
+          </div>
+          <button type="submit" class="btn btn-block">Buat Link</button>
+          <p id="create-msg" class="msg hidden"></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Daftar Link</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th>Tujuan</th>
+              <th>Clicks</th>
+              <th>Dibuat</th>
+              <th>Pemilik</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="links-tbody"></tbody>
+        </table>
+        <p id="links-empty" class="muted hidden">Belum ada link.</p>
+      </div>
+
+      <div id="admin-panel" class="hidden">
+        <div class="card">
+          <h2>Manajemen User</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="profiles-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Allowlist Email</h2>
+          <p class="muted">Email yang diizinkan login. User baru otomatis mendapat role dari kolom Role.</p>
+          <form id="allowlist-form">
+            <div class="row">
+              <div class="field">
+                <label for="allow-email">Email</label>
+                <input id="allow-email" type="email" required placeholder="user@contoh.com" />
+              </div>
+              <div class="field">
+                <label for="allow-role">Role</label>
+                <select id="allow-role">
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+              <button type="submit" class="btn">Tambah</button>
+            </div>
+            <p id="allowlist-msg" class="msg hidden"></p>
+          </form>
+          <table class="table">
+            <thead>
+              <tr><th>Email</th><th>Role</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="allowlist-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
