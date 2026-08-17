@@ -31,14 +31,14 @@ async function guard() {
   if (profileError) {
     console.error("Profile sync error:", profileError.message);
     showDenied();
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: "local" });
     return;
   }
 
   if (!profile) {
     // Email tidak ada di allowlist: session dibuat tapi tidak diizinkan.
     showDenied();
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: "local" });
     return;
   }
 
@@ -81,14 +81,14 @@ function bindGlobalActions() {
     const logoutBtn = el("logout-btn");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async () => {
-        await sb.auth.signOut();
+        await sb.auth.signOut({ scope: "local" });
         window.location.href = "index.html";
       });
     }
     const deniedLogout = el("denied-logout");
     if (deniedLogout) {
       deniedLogout.addEventListener("click", async () => {
-        await sb.auth.signOut();
+        await sb.auth.signOut({ scope: "local" });
         window.location.href = "index.html";
       });
     }
