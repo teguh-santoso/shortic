@@ -25,12 +25,16 @@ Static URL Shortener berbasis fragment (`contoh.com/#code`), tanpa backend serve
 Untuk tiap project, atur di Dashboard → project → **Settings → Builds & deployments**:
 
 **Project `shortener` (public-site → `contoh.com`)**
+- Root directory: **(kosongkan — biarkan default repo root)**
 - Build command: `node scripts/generate-config.js public-site`
 - Build output directory: `public-site`
 
 **Project `shortener-admin` (admin-panel → `admin.contoh.com`)**
+- Root directory: **(kosongkan — biarkan default repo root)**
 - Build command: `node scripts/generate-config.js admin-panel`
 - Build output directory: `admin-panel`
+
+> **Penting:** jangan set Root directory ke subfolder. Build command selalu berjalan dari repo root. Kalau Root directory terlanjur diset, kosongkan; atau pakai command relatif `node ../scripts/generate-config.js .` dengan output directory `.`.
 
 **Environment variables** (tambahkan di kedua project — Settings → Environment variables):
 - `SUPABASE_URL`
