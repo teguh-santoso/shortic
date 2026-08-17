@@ -36,9 +36,12 @@ Untuk tiap project, atur di Dashboard → project → **Settings → Builds & de
 
 > **Penting:** jangan set Root directory ke subfolder. Build command selalu berjalan dari repo root. Kalau Root directory terlanjur diset, kosongkan; atau pakai command relatif `node ../scripts/generate-config.js .` dengan output directory `.`.
 
-**Environment variables** (tambahkan di kedua project — Settings → Environment variables):
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+**Environment variables**:
+- **Kedua project** — Settings → Environment variables:
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+- **Hanya project `shortener-admin`** (untuk menampilkan tautan pendek yang benar di dashboard):
+  - `PUBLIC_BASE_URL` → mis. `https://shortic.teguh.my.id`
 
 > Saat deploy via **Direct Upload**, `config.js` ikut karena di-upload dari folder lokal — pastikan `config.js` sudah terisi sebelum upload.
 

@@ -29,6 +29,30 @@ function shortPreview(url) {
   }
 }
 
+function getShortUrl(code) {
+  const cfg = window.APP_CONFIG || {};
+  let base = String(cfg.PUBLIC_BASE_URL || "").replace(/\/+$/, "");
+  if (!base) {
+    base = window.location.origin.replace("admin.", "");
+  }
+  return base + "/#" + code;
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+}
+
 function formatDate(iso) {
   if (!iso) return "-";
   return new Date(iso).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
@@ -80,11 +104,12 @@ async function loadLinks() {
     const owner = window.APP_USER.role === "admin" && link.owner_id !== window.APP_USER.id ? link.owner_id.slice(0, 8) : "Anda";
     tr.innerHTML = `
       <td><code>${escapeHtml(link.code)}</code></td>
-      <td><a href="${escapeHtml(link.target_url)}" target="_blank" rel="noopener">${escapeHtml(shortPreview(link.target_url))}</a></td>
+      <td><div class="url-cell"><a href="${escapeHtml(link.target_url)}" target="_blank" rel="noopener" title="${escapeHtml(link.target_url)}">${escapeHtml(shortPreview(link.target_url))}</a></div></td>
       <td>${link.click_count}</td>
       <td>${formatDate(link.created_at)}</td>
       <td>${escapeHtml(owner)}</td>
       <td>
+        <button class="btn btn-sm btn-copy" data-code="${escapeHtml(link.code)}" title="Salin tautan pendek"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
         <button class="btn btn-sm btn-edit" data-id="${link.id}" data-code="${escapeHtml(link.code)}" data-url="${escapeHtml(link.target_url)}">Edit</button>
         <button class="btn btn-sm btn-danger btn-delete" data-id="${link.id}">Hapus</button>
       </td>`;
@@ -151,7 +176,7 @@ async function initDashboard() {
     if (result.ok) {
       el("target-url").value = "";
       el("custom-code").value = "";
-      msg.textContent = `Link dibuat: ${window.location.origin.replace("admin.", "")}/#${result.code}`;
+      msg.textContent = `Link dibuat: ${getShortUrl(result.code)}`;
       msg.classList.add("text-success");
       msg.classList.remove("hidden");
       await loadLinks();
@@ -167,8 +192,17 @@ async function initDashboard() {
   });
 
   el("links-tbody").addEventListener("click", async (e) => {
+    const copyBtn = e.target.closest(".btn-copy");
     const editBtn = e.target.closest(".btn-edit");
     const deleteBtn = e.target.closest(".btn-delete");
+    if (copyBtn) {
+      const shortUrl = getShortUrl(copyBtn.dataset.code);
+      await copyToClipboard(shortUrl);
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = "OK";
+      setTimeout(() => { copyBtn.innerHTML = original; }, 1500);
+      return;
+    }
     if (editBtn) {
       const url = prompt("URL tujuan baru:", editBtn.dataset.url);
       if (url === null) return;

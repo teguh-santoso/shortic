@@ -9,11 +9,13 @@ if (!targetDir) {
 
 const url = process.env.SUPABASE_URL || "https://YOUR-PROJECT-REF.supabase.co";
 const key = process.env.SUPABASE_ANON_KEY || "YOUR-ANON-KEY";
+const publicBase = process.env.PUBLIC_BASE_URL || "";
 
 const content =
   "window.APP_CONFIG = {\n" +
   "  SUPABASE_URL: " + JSON.stringify(url) + ",\n" +
   "  SUPABASE_ANON_KEY: " + JSON.stringify(key) + ",\n" +
+  "  PUBLIC_BASE_URL: " + JSON.stringify(publicBase) + ",\n" +
   "};\n";
 
 fs.mkdirSync(targetDir, { recursive: true });

@@ -24,7 +24,7 @@ async function resolveCode(code) {
   return data && data.length > 0 ? data[0] : null;
 }
 
-function redirectTo(url) {
+async function redirectTo(url) {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
@@ -35,7 +35,11 @@ function redirectTo(url) {
     return;
   }
   const code = getCodeFromHash();
-  sb.rpc("increment_click_count", { p_code: code }).catch(() => {});
+  try {
+    await sb.rpc("increment_click_count", { p_code: code });
+  } catch (err) {
+    console.error("Gagal menambah click count:", err.message);
+  }
   window.location.replace(url);
 }
 
@@ -49,7 +53,7 @@ async function init() {
   show("state-loading");
   const link = await resolveCode(code);
   if (link) {
-    redirectTo(link.target_url);
+    await redirectTo(link.target_url);
   } else {
     show("state-error");
   }
