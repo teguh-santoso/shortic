@@ -139,3 +139,21 @@ end;
 $$;
 
 grant execute on function public.sync_profile_for_current_user() to authenticated;
+
+-- ---------- Helper: is_admin ----------
+-- Dipakai oleh RLS policies. SECURITY DEFINER supaya query ke profiles
+-- melewati RLS dan tidak memicu infinite recursion policy.
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+grant execute on function public.is_admin() to anon, authenticated;
