@@ -1,5 +1,5 @@
 const CONFIG = window.APP_CONFIG;
-const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 const isLoginPage = !!document.getElementById("login-btn");
 const isDashboard = !!document.getElementById("dashboard");
@@ -7,7 +7,7 @@ const isDashboard = !!document.getElementById("dashboard");
 const el = (id) => document.getElementById(id);
 
 async function guard() {
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await sb.auth.getSession();
   if (error) {
     console.error("Session error:", error.message);
   }
@@ -26,7 +26,7 @@ async function guard() {
 
   el("user-email").textContent = session.user.email;
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await sb
     .from("profiles")
     .select("id, role, email")
     .eq("id", session.user.id)
@@ -35,7 +35,7 @@ async function guard() {
   if (profileError || !profile) {
     // Ditolak allowlist: session dibuat tapi profile tidak ada.
     showDenied();
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     return;
   }
 
@@ -59,7 +59,7 @@ function bindGlobalActions() {
     el("login-btn").addEventListener("click", async () => {
       const msg = el("login-msg");
       msg.classList.add("hidden");
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await sb.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: window.location.origin + "/dashboard.html" },
       });
@@ -74,21 +74,21 @@ function bindGlobalActions() {
     const logoutBtn = el("logout-btn");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async () => {
-        await supabase.auth.signOut();
+        await sb.auth.signOut();
         window.location.href = "index.html";
       });
     }
     const deniedLogout = el("denied-logout");
     if (deniedLogout) {
       deniedLogout.addEventListener("click", async () => {
-        await supabase.auth.signOut();
+        await sb.auth.signOut();
         window.location.href = "index.html";
       });
     }
   }
 }
 
-supabase.auth.onAuthStateChange((event, session) => {
+sb.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_IN" && session && isLoginPage) {
     window.location.href = "dashboard.html";
   }

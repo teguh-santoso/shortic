@@ -8,7 +8,7 @@ const show = (id) => {
   el(id).classList.remove("hidden");
 };
 
-const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 function getCodeFromHash() {
   const hash = window.location.hash.replace(/^#/, "");
@@ -16,7 +16,7 @@ function getCodeFromHash() {
 }
 
 async function resolveCode(code) {
-  const { data, error } = await supabase.rpc("get_link_by_code", { p_code: code });
+  const { data, error } = await sb.rpc("get_link_by_code", { p_code: code });
   if (error) {
     console.error("Lookup error:", error.message);
     return null;
@@ -35,7 +35,7 @@ function redirectTo(url) {
     return;
   }
   const code = getCodeFromHash();
-  supabase.rpc("increment_click_count", { p_code: code }).catch(() => {});
+  sb.rpc("increment_click_count", { p_code: code }).catch(() => {});
   window.location.replace(url);
 }
 

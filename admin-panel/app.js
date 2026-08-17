@@ -1,4 +1,3 @@
-const el = (id) => document.getElementById(id);
 const CODE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const CODE_LENGTH = 6;
 
@@ -39,7 +38,7 @@ async function createLink(targetUrl, code) {
   // Coba insert; kalau unique violation (kode sudah dipakai), retry dengan kode baru.
   for (let attempt = 0; attempt < 5; attempt++) {
     const candidate = code || randomCode();
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("links")
       .insert({ code: candidate, target_url: targetUrl, owner_id: window.APP_USER.id })
       .select("code")
@@ -59,7 +58,7 @@ async function loadLinks() {
   const tbody = el("links-tbody");
   tbody.innerHTML = "";
 
-  let query = supabase.from("links").select("id, code, target_url, click_count, created_at, owner_id");
+  let query = sb.from("links").select("id, code, target_url, click_count, created_at, owner_id");
   if (window.APP_USER.role !== "admin") {
     query = query.eq("owner_id", window.APP_USER.id);
   }
@@ -96,7 +95,7 @@ async function loadLinks() {
 async function loadProfiles() {
   const tbody = el("profiles-tbody");
   tbody.innerHTML = "";
-  const { data, error } = await supabase.from("profiles").select("id, email, role").order("email");
+  const { data, error } = await sb.from("profiles").select("id, email, role").order("email");
 
   if (error) {
     console.error("loadProfiles error:", error.message);
@@ -121,7 +120,7 @@ async function loadProfiles() {
 async function loadAllowlist() {
   const tbody = el("allowlist-tbody");
   tbody.innerHTML = "";
-  const { data, error } = await supabase.from("allowed_emails").select("email, role, added_at").order("added_at", { ascending: false });
+  const { data, error } = await sb.from("allowed_emails").select("email, role, added_at").order("added_at", { ascending: false });
 
   if (error) {
     console.error("loadAllowlist error:", error.message);
@@ -173,7 +172,7 @@ async function initDashboard() {
     if (editBtn) {
       const url = prompt("URL tujuan baru:", editBtn.dataset.url);
       if (url === null) return;
-      const { error } = await supabase
+      const { error } = await sb
         .from("links")
         .update({ target_url: url.trim() })
         .eq("id", editBtn.dataset.id);
@@ -182,7 +181,7 @@ async function initDashboard() {
     }
     if (deleteBtn) {
       if (!confirm("Hapus link ini?")) return;
-      const { error } = await supabase.from("links").delete().eq("id", deleteBtn.dataset.id);
+      const { error } = await sb.from("links").delete().eq("id", deleteBtn.dataset.id);
       if (error) alert("Gagal hapus: " + error.message);
       await loadLinks();
     }
@@ -192,7 +191,7 @@ async function initDashboard() {
     el("profiles-tbody").addEventListener("click", async (e) => {
       const btn = e.target.closest("[data-action='role']");
       if (!btn) return;
-      const { error } = await supabase
+      const { error } = await sb
         .from("profiles")
         .update({ role: btn.dataset.role })
         .eq("id", btn.dataset.id);
@@ -207,7 +206,7 @@ async function initDashboard() {
       const msg = el("allowlist-msg");
       msg.classList.add("hidden");
 
-      const { error } = await supabase.from("allowed_emails").insert({ email, role });
+      const { error } = await sb.from("allowed_emails").insert({ email, role });
       if (error) {
         msg.textContent = "Gagal menambah: " + error.message;
         msg.classList.add("text-danger");
@@ -224,7 +223,7 @@ async function initDashboard() {
       const btn = e.target.closest("[data-action='allow-delete']");
       if (!btn) return;
       if (!confirm(`Hapus ${btn.dataset.email} dari allowlist?`)) return;
-      const { error } = await supabase.from("allowed_emails").delete().eq("email", btn.dataset.email);
+      const { error } = await sb.from("allowed_emails").delete().eq("email", btn.dataset.email);
       if (error) alert("Gagal hapus: " + error.message);
       await loadAllowlist();
     });

@@ -4,6 +4,9 @@ plan.md
 .env.local
 *.local
 
+# Runtime config (isi lokal, jangan di-push)
+config.js
+
 # Build artifacts
 node_modules/
 dist/
