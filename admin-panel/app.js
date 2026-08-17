@@ -58,6 +58,23 @@ function formatDate(iso) {
   return new Date(iso).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+function spinIcon(id) {
+  const icon = document.getElementById(id);
+  if (!icon) return;
+  icon.classList.remove("icon-spin");
+  void icon.offsetWidth;
+  icon.classList.add("icon-spin");
+}
+
 async function createLink(targetUrl, code) {
   // Coba insert; kalau unique violation (kode sudah dipakai), retry dengan kode baru.
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -170,25 +187,36 @@ async function initDashboard() {
     const url = el("target-url").value.trim();
     const custom = el("custom-code").value.trim().toLowerCase();
     const msg = el("create-msg");
+    const createBtn = el("create-btn");
     msg.classList.add("hidden");
 
-    const result = await createLink(url, custom);
-    if (result.ok) {
-      el("target-url").value = "";
-      el("custom-code").value = "";
-      msg.textContent = `Link dibuat: ${getShortUrl(result.code)}`;
-      msg.classList.add("text-success");
-      msg.classList.remove("hidden");
-      await loadLinks();
-    } else {
-      msg.textContent = "Gagal membuat link: " + result.error.message;
-      msg.classList.add("text-danger");
-      msg.classList.remove("hidden");
+    createBtn.disabled = true;
+    createBtn.classList.add("btn-loading");
+
+    try {
+      const result = await createLink(url, custom);
+      if (result.ok) {
+        el("target-url").value = "";
+        el("custom-code").value = "";
+        msg.textContent = `Link dibuat: ${getShortUrl(result.code)}`;
+        msg.classList.add("text-success");
+        msg.classList.remove("hidden");
+        showToast("Link berhasil dibuat");
+        await loadLinks();
+      } else {
+        msg.textContent = "Gagal membuat link: " + result.error.message;
+        msg.classList.add("text-danger");
+        msg.classList.remove("hidden");
+      }
+    } finally {
+      createBtn.disabled = false;
+      createBtn.classList.remove("btn-loading");
     }
   });
 
   el("generate-btn").addEventListener("click", () => {
     el("custom-code").value = randomCode();
+    spinIcon("generate-icon");
   });
 
   el("links-tbody").addEventListener("click", async (e) => {
@@ -198,9 +226,7 @@ async function initDashboard() {
     if (copyBtn) {
       const shortUrl = getShortUrl(copyBtn.dataset.code);
       await copyToClipboard(shortUrl);
-      const original = copyBtn.innerHTML;
-      copyBtn.innerHTML = "OK";
-      setTimeout(() => { copyBtn.innerHTML = original; }, 1500);
+      showToast("Tautan disalin: " + shortUrl);
       return;
     }
     if (editBtn) {

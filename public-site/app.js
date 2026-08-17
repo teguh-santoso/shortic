@@ -1,13 +1,5 @@
 const CONFIG = window.APP_CONFIG;
 
-const el = (id) => document.getElementById(id);
-const show = (id) => {
-  el("state-loading").classList.add("hidden");
-  el("state-error").classList.add("hidden");
-  el("state-landing").classList.add("hidden");
-  el(id).classList.remove("hidden");
-};
-
 const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 function getCodeFromHash() {
@@ -24,39 +16,33 @@ async function resolveCode(code) {
   return data && data.length > 0 ? data[0] : null;
 }
 
-async function redirectTo(url) {
+function isValidTarget(url) {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new Error("Invalid protocol");
-    }
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
   } catch {
-    show("state-error");
+    return false;
+  }
+}
+
+async function init() {
+  const code = getCodeFromHash();
+  if (!code) return;
+
+  const link = await resolveCode(code);
+  if (!link) return;
+
+  if (!isValidTarget(link.target_url)) {
+    console.error("Target URL tidak valid:", link.target_url);
     return;
   }
-  const code = getCodeFromHash();
+
   try {
     await sb.rpc("increment_click_count", { p_code: code });
   } catch (err) {
     console.error("Gagal menambah click count:", err.message);
   }
-  window.location.replace(url);
-}
-
-async function init() {
-  const code = getCodeFromHash();
-  if (!code) {
-    show("state-landing");
-    return;
-  }
-
-  show("state-loading");
-  const link = await resolveCode(code);
-  if (link) {
-    await redirectTo(link.target_url);
-  } else {
-    show("state-error");
-  }
+  window.location.replace(link.target_url);
 }
 
 init();

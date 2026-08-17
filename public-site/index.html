@@ -8,22 +8,31 @@
 </head>
 <body>
   <main class="container">
-    <h1 class="logo">shortic</h1>
+    <svg class="shortic-logo" viewBox="0 0 300 122" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="shortic">
+      <defs>
+        <linearGradient id="shortic-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#8b5cf6" />
+          <stop offset="100%" stop-color="#22d3ee" />
+        </linearGradient>
+      </defs>
+      <g fill="url(#shortic-grad)">
+        <text x="4" y="68" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(-7 4 68)">s</text>
+        <text x="40" y="76" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(5 40 76)">h</text>
+        <text x="78" y="64" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(-3 78 64)">o</text>
+        <text x="116" y="70" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(4 116 70)">r</text>
+        <text x="150" y="78" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(-2 150 78)">t</text>
+        <text x="184" y="62" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(7 184 62)">i</text>
+        <text x="218" y="72" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="52" transform="rotate(-6 218 72)">c</text>
+      </g>
+      <g>
+        <circle cx="92" cy="40" r="3.2" fill="#0f172a" />
+        <circle cx="105" cy="40" r="3.2" fill="#0f172a" />
+        <path d="M90 48 Q 98.5 54 107 48" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+      </g>
+      <path d="M12 94 Q 150 116 280 92" fill="none" stroke="url(#shortic-grad)" stroke-width="5" stroke-linecap="round" />
+      <path d="M272 8 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#f59e0b" />
+    </svg>
     <p class="tagline">Tautan pendek, cepat, dan tanpa server.</p>
-
-    <div id="state-loading" class="state hidden">
-      <p>Mengalihkan…</p>
-    </div>
-
-    <div id="state-error" class="state hidden">
-      <h2>Link tidak ditemukan</h2>
-      <p>Tautan pendek yang kamu buka tidak valid atau sudah dihapus.</p>
-      <a class="btn" href="./">Kembali ke beranda</a>
-    </div>
-
-    <div id="state-landing" class="state">
-      <p>Buka tautan pendek seperti <code>contoh.com/#abc123</code> untuk dialihkan.</p>
-    </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

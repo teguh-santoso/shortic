@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>shortic Admin — Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,6 +13,10 @@
     <div class="topbar-right">
       <span id="user-email" class="user-email"></span>
       <span id="user-role" class="badge"></span>
+      <button id="theme-toggle" title="Ganti mode terang/malam" aria-label="Ganti mode terang/malam">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
       <button id="logout-btn" class="btn btn-sm">Keluar</button>
     </div>
   </header>
@@ -19,59 +24,72 @@
   <main class="container">
     <section id="denied-box" class="card hidden">
       <h2>Email tidak terdaftar</h2>
-      <p>Akun kamu tidak ada di daftar izin (allowlist). Hubungi admin untuk didaftarkan.</p>
+      <p class="muted">Akun kamu tidak ada di daftar izin (allowlist). Hubungi admin untuk didaftarkan.</p>
       <button id="denied-logout" class="btn btn-danger">Keluar</button>
     </section>
 
     <section id="dashboard" class="hidden">
-      <div class="card">
-        <h2>Tambah Link</h2>
-        <form id="create-form">
-          <label for="target-url">URL tujuan</label>
-          <input id="target-url" type="url" required placeholder="https://contoh-tujuan.com/panjang/..." />
-          <div class="row">
-            <div class="field">
+      <div class="row">
+        <div class="col s12 l4">
+          <div class="card">
+            <h2>Tambah Link</h2>
+            <form id="create-form">
+              <label for="target-url">URL tujuan</label>
+              <input id="target-url" type="url" required placeholder="https://contoh-tujuan.com/panjang/..." />
               <label for="custom-code">Kode pendek (opsional, 6+ karakter)</label>
-              <input id="custom-code" type="text" minlength="6" placeholder="acak otomatis jika kosong" />
-            </div>
-            <button type="button" id="generate-btn" class="btn btn-sm" title="Generate kode acak">Acak</button>
+              <div class="row">
+                <div class="field">
+                  <input id="custom-code" type="text" minlength="6" placeholder="acak otomatis jika kosong" />
+                </div>
+                <button type="button" id="generate-btn" class="btn btn-sm" title="Generate kode acak">
+                  <svg id="generate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  Acak
+                </button>
+              </div>
+              <button type="submit" id="create-btn" class="btn btn-block">Buat Link</button>
+              <p id="create-msg" class="msg hidden"></p>
+            </form>
           </div>
-          <button type="submit" class="btn btn-block">Buat Link</button>
-          <p id="create-msg" class="msg hidden"></p>
-        </form>
-      </div>
+        </div>
 
-      <div class="card">
-        <h2>Daftar Link</h2>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Kode</th>
-              <th>Tujuan</th>
-              <th>Clicks</th>
-              <th>Dibuat</th>
-              <th>Pemilik</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="links-tbody"></tbody>
-        </table>
-        <p id="links-empty" class="muted hidden">Belum ada link.</p>
+        <div class="col s12 l8">
+          <div class="card">
+            <h2>Daftar Link</h2>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th>Tujuan</th>
+                    <th>Clicks</th>
+                    <th>Dibuat</th>
+                    <th>Pemilik</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="links-tbody"></tbody>
+              </table>
+            </div>
+            <p id="links-empty" class="muted hidden">Belum ada link.</p>
+          </div>
+        </div>
       </div>
 
       <div id="admin-panel" class="hidden">
         <div class="card">
           <h2>Manajemen User</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="profiles-tbody"></tbody>
-          </table>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="profiles-tbody"></tbody>
+            </table>
+          </div>
         </div>
 
         <div class="card">
@@ -90,23 +108,28 @@
                   <option value="admin">admin</option>
                 </select>
               </div>
-              <button type="submit" class="btn">Tambah</button>
+              <button type="submit" id="allowlist-btn" class="btn">Tambah</button>
             </div>
             <p id="allowlist-msg" class="msg hidden"></p>
           </form>
-          <table class="table">
-            <thead>
-              <tr><th>Email</th><th>Role</th><th>Aksi</th></tr>
-            </thead>
-            <tbody id="allowlist-tbody"></tbody>
-          </table>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>Email</th><th>Role</th><th>Aksi</th></tr>
+              </thead>
+              <tbody id="allowlist-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
+  <div id="toast" class="toast-fixed"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="theme.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>
