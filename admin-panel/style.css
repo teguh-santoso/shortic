@@ -285,16 +285,27 @@ select {
   background-repeat: no-repeat;
 }
 
-.row {
+/* Form row inline (bukan grid Materialize) */
+.inline-row {
   display: flex;
   gap: 1rem;
   align-items: flex-end;
   flex-wrap: wrap;
+  margin-bottom: 0.5rem;
 }
 
-.row .field {
+.inline-row .field {
   flex: 1;
   min-width: 160px;
+}
+
+/* Materialize grid: rapikan margin bawaan agar tidak berantakan */
+.row {
+  margin-bottom: 0;
+}
+
+.row .col {
+  margin-bottom: 0;
 }
 
 .msg {
