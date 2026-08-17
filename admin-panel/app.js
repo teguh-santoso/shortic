@@ -235,4 +235,4 @@ async function initDashboard() {
   await loadLinks();
 }
 
-initDashboard();
+window.onAuthReady = initDashboard;

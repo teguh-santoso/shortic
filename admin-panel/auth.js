@@ -50,6 +50,10 @@ async function guard() {
   if (profile.role === "admin") {
     el("admin-panel").classList.remove("hidden");
   }
+
+  if (typeof window.onAuthReady === "function") {
+    window.onAuthReady();
+  }
 }
 
 function showDenied() {
