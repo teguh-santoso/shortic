@@ -1,0 +1,2 @@
+# shortic
+Static URL Shortener
