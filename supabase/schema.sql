@@ -94,3 +94,48 @@ as $$
      set click_count = click_count + 1
    where code = p_code;
 $$;
+
+-- ---------- RPC: sync_profile_for_current_user ----------
+-- Dipanggil admin-panel setelah login. Membuat/menyinkronkan baris profiles
+-- untuk user yang sedang login kalau emailnya ada di allowed_emails.
+-- Mengatasi kasus user auth.users yang dibuat sebelum trigger allowlist
+-- terpasang (atau sebelum email ditambahkan ke allowlist) sehingga tidak
+-- punya baris profiles.
+create or replace function public.sync_profile_for_current_user()
+returns public.profiles
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email  text;
+  v_role   text;
+  v_profile public.profiles;
+begin
+  select lower(email) into v_email
+    from auth.users
+   where id = auth.uid();
+
+  if v_email is null then
+    return null;
+  end if;
+
+  select role into v_role
+    from public.allowed_emails
+   where email = v_email;
+
+  -- Email tidak ada di allowlist -> bukan user yang sah.
+  if v_role is null then
+    return null;
+  end if;
+
+  insert into public.profiles (id, role, email)
+  values (auth.uid(), v_role, v_email)
+  on conflict (id) do update set role = excluded.role, email = excluded.email
+  returning * into v_profile;
+
+  return v_profile;
+end;
+$$;
+
+grant execute on function public.sync_profile_for_current_user() to authenticated;

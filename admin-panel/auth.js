@@ -26,14 +26,17 @@ async function guard() {
 
   el("user-email").textContent = session.user.email;
 
-  const { data: profile, error: profileError } = await sb
-    .from("profiles")
-    .select("id, role, email")
-    .eq("id", session.user.id)
-    .maybeSingle();
+  const { data: profile, error: profileError } = await sb.rpc("sync_profile_for_current_user");
 
-  if (profileError || !profile) {
-    // Ditolak allowlist: session dibuat tapi profile tidak ada.
+  if (profileError) {
+    console.error("Profile sync error:", profileError.message);
+    showDenied();
+    await sb.auth.signOut();
+    return;
+  }
+
+  if (!profile) {
+    // Email tidak ada di allowlist: session dibuat tapi tidak diizinkan.
     showDenied();
     await sb.auth.signOut();
     return;
