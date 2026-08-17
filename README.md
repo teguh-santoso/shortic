@@ -20,7 +20,22 @@ Static URL Shortener berbasis fragment (`contoh.com/#code`), tanpa backend serve
 
 ## Deploy ke Cloudflare Pages
 
-- `public-site/` → project `shortener`, custom domain `contoh.com`
-- `admin-panel/` → project `shortener-admin`, custom domain `admin.contoh.com`
+`config.js` **tidak** disimpan di repo (lihat `.gitignore`). Saat deploy, file di-generate dari environment variables via `scripts/generate-config.js`.
+
+Untuk tiap project, atur di Dashboard → project → **Settings → Builds & deployments**:
+
+**Project `shortener` (public-site → `contoh.com`)**
+- Build command: `node scripts/generate-config.js public-site`
+- Build output directory: `public-site`
+
+**Project `shortener-admin` (admin-panel → `admin.contoh.com`)**
+- Build command: `node scripts/generate-config.js admin-panel`
+- Build output directory: `admin-panel`
+
+**Environment variables** (tambahkan di kedua project — Settings → Environment variables):
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+> Saat deploy via **Direct Upload**, `config.js` ikut karena di-upload dari folder lokal — pastikan `config.js` sudah terisi sebelum upload.
 
 Setelah deploy, tambahkan `https://admin.contoh.com` ke *Authorized JavaScript origins* di Google Cloud Console.
