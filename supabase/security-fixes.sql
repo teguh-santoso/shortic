@@ -5,13 +5,11 @@
 -- ============================================================
 
 -- ---------- M1: block target_url selain http/https (anti javascript: XSS) ----------
--- Bersihkan baris yang sudah terlanjur melanggar (harusnya tidak ada).
-delete from public.links where target_url !~* '^https?://';
-
+-- Pakai NOT VALID supaya TIDAK menyentuh/menghapus data lama.
 alter table public.links drop constraint if exists links_target_url_http;
 alter table public.links
   add constraint links_target_url_http
-  check (target_url ~* '^https?://');
+  check (target_url ~* '^https?://') not valid;
 
 -- ---------- M2: jangan timpa role saat login (biarkan promosi/demosi bertahan) ----------
 create or replace function public.sync_profile_for_current_user()
@@ -44,7 +42,7 @@ begin
 
   insert into public.profiles (id, role, email)
   values (auth.uid(), v_role, v_email)
-  on conflict (id) do nothing
+  on conflict (id) do update set email = excluded.email
   returning * into v_profile;
 
   return v_profile;

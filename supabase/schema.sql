@@ -131,7 +131,7 @@ begin
 
   insert into public.profiles (id, role, email)
   values (auth.uid(), v_role, v_email)
-  on conflict (id) do nothing
+  on conflict (id) do update set email = excluded.email
   returning * into v_profile;
 
   return v_profile;
