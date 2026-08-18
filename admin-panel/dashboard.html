@@ -55,15 +55,18 @@
         <div class="col s12 l8">
           <div class="card">
             <h2>Daftar Link</h2>
+            <div class="toolbar">
+              <input id="link-search" type="search" placeholder="Cari kode atau URL…" />
+            </div>
             <div class="table-wrap">
-              <table class="table">
+              <table id="links-table" class="table">
                 <thead>
                   <tr>
                     <th>Kode</th>
-                    <th>Tujuan</th>
+                    <th class="hide-sm">Tujuan</th>
                     <th>Clicks</th>
-                    <th>Dibuat</th>
-                    <th>Pemilik</th>
+                    <th class="hide-sm">Dibuat</th>
+                    <th class="hide-sm">Pemilik</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -71,6 +74,11 @@
               </table>
             </div>
             <p id="links-empty" class="muted hidden">Belum ada link.</p>
+            <nav id="pagination" class="pagination-row hidden">
+              <button id="prev-page" class="btn btn-sm" type="button">‹ Sebelumnya</button>
+              <span id="page-info" class="muted"></span>
+              <button id="next-page" class="btn btn-sm" type="button">Berikutnya ›</button>
+            </nav>
           </div>
         </div>
       </div>
@@ -125,9 +133,37 @@
     </section>
   </main>
 
+  <div id="detail-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Detail Link</h3>
+        <button id="detail-close" class="icon-btn" aria-label="Tutup"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <dl id="detail-body" class="modal-body"></dl>
+    </div>
+  </div>
+
+  <div id="qr-modal" class="modal-overlay hidden">
+    <div class="modal-box modal-box-sm">
+      <div class="modal-head">
+        <h3>QR Code</h3>
+        <button id="qr-close" class="icon-btn" aria-label="Tutup"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="qr-body">
+        <div id="qr-code"></div>
+        <p id="qr-url" class="qr-url"></p>
+        <div class="qr-actions">
+          <button id="qr-copy" class="btn btn-sm" type="button">Salin</button>
+          <a id="qr-download" class="btn btn-sm" download>Download PNG</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast-fixed"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="config.js"></script>
   <script src="theme.js"></script>
   <script src="auth.js"></script>

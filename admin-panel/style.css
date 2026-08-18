@@ -172,8 +172,9 @@ html[data-theme="dark"] #theme-toggle .icon-sun {
 
 /* ---------- Buttons ---------- */
 .btn {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, #7c3aed, #0891b2);
   color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   border: none;
   border-radius: 10px;
   box-shadow: none !important;
@@ -208,6 +209,10 @@ html[data-theme="dark"] #theme-toggle .icon-sun {
   line-height: 30px;
   padding: 0 0.8rem;
   font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .btn-block {
@@ -256,6 +261,7 @@ label {
 input[type="text"],
 input[type="url"],
 input[type="email"],
+input[type="search"],
 select {
   width: 100%;
   height: 40px;
@@ -274,6 +280,32 @@ input:focus,
 select:focus {
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+
+input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.toolbar {
+  margin-bottom: 1rem;
+}
+
+.toolbar input {
+  margin-bottom: 0;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination-row .muted {
+  font-size: 0.85rem;
 }
 
 select {
@@ -454,6 +486,126 @@ code {
   transform: translateX(-50%) translateY(0);
 }
 
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+  animation: fade-in 0.2s ease;
+}
+
+.modal-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.28);
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  animation: fade-in-up 0.25s ease;
+}
+
+.modal-box-sm {
+  max-width: 360px;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.icon-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  transform: scale(1.06);
+}
+
+.modal-body {
+  margin: 0;
+}
+
+.modal-body dt {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.9rem;
+}
+
+.modal-body dd {
+  margin: 0.15rem 0 0;
+  word-break: break-all;
+}
+
+.detail-url {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.qr-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: center;
+}
+
+#qr-code {
+  padding: 0.75rem;
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+#qr-code img,
+#qr-code canvas {
+  display: block;
+}
+
+.qr-url {
+  color: var(--muted);
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.qr-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* ---------- Animations ---------- */
 @keyframes fade-in-up {
   from {
@@ -463,6 +615,15 @@ code {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -497,6 +658,20 @@ code {
   }
   .row {
     gap: 0.5rem;
+  }
+}
+
+/* Mobile: daftar link hanya kolom utama (Kode, Clicks, Aksi),
+   sisanya lewat tombol detail. */
+@media (max-width: 767px) {
+  #links-table .hide-sm {
+    display: none;
+  }
+  #links-table {
+    min-width: 0;
+  }
+  .url-cell {
+    max-width: 140px;
   }
 }
 
