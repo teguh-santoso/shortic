@@ -7,7 +7,7 @@
 create table if not exists public.links (
   id          uuid primary key default gen_random_uuid(),
   code        text not null unique,
-  target_url  text not null,
+  target_url  text not null check (target_url ~* '^https?://'),
   owner_id    uuid not null references auth.users (id) on delete cascade,
   created_at  timestamptz not null default now(),
   click_count integer not null default 0
@@ -131,7 +131,7 @@ begin
 
   insert into public.profiles (id, role, email)
   values (auth.uid(), v_role, v_email)
-  on conflict (id) do update set role = excluded.role, email = excluded.email
+  on conflict (id) do nothing
   returning * into v_profile;
 
   return v_profile;

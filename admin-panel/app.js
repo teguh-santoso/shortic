@@ -11,6 +11,15 @@ function randomCode(length = CODE_LENGTH) {
   return out;
 }
 
+function isValidHttpUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -76,6 +85,12 @@ function spinIcon(id) {
 }
 
 async function createLink(targetUrl, code) {
+  if (!isValidHttpUrl(targetUrl)) {
+    return { ok: false, error: { message: "URL tujuan harus diawali http:// atau https://" } };
+  }
+  if (code && !/^[a-z0-9]{6,}$/.test(code)) {
+    return { ok: false, error: { message: "Kode pendek harus 6+ karakter alfanumerik (a-z, 0-9)" } };
+  }
   // Coba insert; kalau unique violation (kode sudah dipakai), retry dengan kode baru.
   for (let attempt = 0; attempt < 5; attempt++) {
     const candidate = code || randomCode();
@@ -255,7 +270,7 @@ async function loadProfiles() {
       <td>${escapeHtml(profile.email)} ${isSelf ? "(Anda)" : ""}</td>
       <td>${escapeHtml(profile.role)}</td>
       <td>
-        <button class="btn btn-sm" data-action="role" data-id="${profile.id}" data-role="${profile.role === "admin" ? "user" : "admin"}" ${isSelf ? "disabled" : ""}>
+        <button class="btn btn-sm" data-action="role" data-id="${profile.id}" data-email="${escapeHtml(profile.email)}" data-role="${profile.role === "admin" ? "user" : "admin"}" ${isSelf ? "disabled" : ""}>
           ${profile.role === "admin" ? "Turunkan ke user" : "Naikkan ke admin"}
         </button>
       </td>`;
@@ -369,9 +384,14 @@ async function initDashboard() {
     if (editBtn) {
       const url = prompt("URL tujuan baru:", editBtn.dataset.url);
       if (url === null) return;
+      const trimmed = url.trim();
+      if (!isValidHttpUrl(trimmed)) {
+        alert("URL tujuan harus diawali http:// atau https://");
+        return;
+      }
       const { error } = await sb
         .from("links")
-        .update({ target_url: url.trim() })
+        .update({ target_url: trimmed })
         .eq("id", editBtn.dataset.id);
       if (error) alert("Gagal update: " + error.message);
       await fetchLinks();
@@ -420,6 +440,13 @@ async function initDashboard() {
         .update({ role: btn.dataset.role })
         .eq("id", btn.dataset.id);
       if (error) alert("Gagal ubah role: " + error.message);
+      else {
+        // Sinkronkan role di allowlist supaya tetap konsisten (dipakai saat signup/readd).
+        await sb
+          .from("allowed_emails")
+          .update({ role: btn.dataset.role })
+          .eq("email", btn.dataset.email);
+      }
       await loadProfiles();
     });
 
@@ -449,7 +476,12 @@ async function initDashboard() {
       if (!confirm(`Hapus ${btn.dataset.email} dari allowlist?`)) return;
       const { error } = await sb.from("allowed_emails").delete().eq("email", btn.dataset.email);
       if (error) alert("Gagal hapus: " + error.message);
+      else {
+        // Revoke penuh: hapus profile supaya role (termasuk admin) ikut dicabut.
+        await sb.from("profiles").delete().eq("email", btn.dataset.email);
+      }
       await loadAllowlist();
+      await loadProfiles();
     });
 
     await loadProfiles();

@@ -5,6 +5,15 @@
 -- Jalankan di Supabase SQL Editor sekali.
 -- ============================================================
 
+-- 0. Guard: jangan lanjut kalau allowlist kosong (hindari menghapus semua admin).
+do $$
+begin
+  if (select count(*) from public.allowed_emails) = 0 then
+    raise exception 'ABORT: allowed_emails kosong. Isi minimal satu admin sebelum reconcile.';
+  end if;
+end
+$$;
+
 -- 1. Buat profile untuk user yang emailnya sudah ada di allowlist.
 insert into public.profiles (id, role, email)
 select u.id, a.role, lower(u.email)

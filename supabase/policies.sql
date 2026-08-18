@@ -55,6 +55,12 @@ create policy "profiles_update_admin_only"
   to authenticated
   using (public.is_admin());
 
+drop policy if exists "profiles_delete_admin_only" on public.profiles;
+create policy "profiles_delete_admin_only"
+  on public.profiles for delete
+  to authenticated
+  using (public.is_admin());
+
 -- ---------- allowed_emails ----------
 drop policy if exists "allowed_emails_admin_insert" on public.allowed_emails;
 create policy "allowed_emails_admin_insert"
@@ -65,6 +71,12 @@ create policy "allowed_emails_admin_insert"
 drop policy if exists "allowed_emails_admin_select" on public.allowed_emails;
 create policy "allowed_emails_admin_select"
   on public.allowed_emails for select
+  to authenticated
+  using (public.is_admin());
+
+drop policy if exists "allowed_emails_admin_update" on public.allowed_emails;
+create policy "allowed_emails_admin_update"
+  on public.allowed_emails for update
   to authenticated
   using (public.is_admin());
 
