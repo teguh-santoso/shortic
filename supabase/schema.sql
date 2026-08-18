@@ -79,7 +79,7 @@ stable
 as $$
   select l.id, l.code, l.target_url, l.click_count
     from public.links l
-   where l.code = p_code
+   where lower(l.code) = lower(p_code)
    limit 1;
 $$;
 
@@ -92,7 +92,7 @@ set search_path = public
 as $$
   update public.links
      set click_count = click_count + 1
-   where code = p_code;
+   where lower(code) = lower(p_code);
 $$;
 
 -- ---------- RPC: sync_profile_for_current_user ----------

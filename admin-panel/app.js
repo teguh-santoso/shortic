@@ -1,4 +1,4 @@
-const CODE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const CODE_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 const CODE_LENGTH = 6;
 
 function randomCode(length = CODE_LENGTH) {
