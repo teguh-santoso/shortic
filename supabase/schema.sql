@@ -1,9 +1,26 @@
 -- ============================================================
--- shortic — Supabase schema
--- Run this in the Supabase SQL Editor (as postgres/service role).
+-- shortic — Supabase schema (canonical source of truth)
+--
+-- Idempotent: safe to re-run on a fresh or existing database.
+-- Run in the Supabase SQL Editor as postgres/service role.
+--
+-- This file defines tables, functions, the allowlist trigger and
+-- all grants. Every security fix is merged here:
+--   * URL scheme check on links.target_url (blocks javascript: XSS)
+--   * case-insensitive short-code lookup
+--   * role-preserving profile sync (promotion/demotion persists)
+--   * allowlist enforcement on signup via trigger
+--
+-- For an existing database, re-running this file updates functions
+-- and grants via CREATE OR REPLACE / GRANT. If the URL check
+-- constraint is missing on an already-created `links` table, add it
+-- once with:
+--   ALTER TABLE public.links
+--     ADD CONSTRAINT links_target_url_http
+--     CHECK (target_url ~* '^https?://') NOT VALID;
 -- ============================================================
 
--- ---------- Tabel: links ----------
+-- ---------- Table: links ----------
 create table if not exists public.links (
   id          uuid primary key default gen_random_uuid(),
   code        text not null unique,
@@ -15,7 +32,7 @@ create table if not exists public.links (
 
 comment on table public.links is 'Short codes -> target URLs. Only accessible via RPC get_link_by_code for anon.';
 
--- ---------- Tabel: profiles ----------
+-- ---------- Table: profiles ----------
 create table if not exists public.profiles (
   id         uuid primary key references auth.users (id) on delete cascade,
   role       text not null default 'user' check (role in ('user', 'admin')),
@@ -23,7 +40,7 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
--- ---------- Tabel: allowed_emails (allowlist Google OAuth) ----------
+-- ---------- Table: allowed_emails (Google OAuth allowlist) ----------
 create table if not exists public.allowed_emails (
   email    text primary key,
   role     text not null default 'user' check (role in ('user', 'admin')),
@@ -31,7 +48,9 @@ create table if not exists public.allowed_emails (
 );
 
 -- ---------- Trigger: enforce allowlist on signup ----------
--- Menjalankan untuk setiap insert ke auth.users (signup baru via Google OAuth).
+-- Runs for every insert into auth.users (new Google OAuth signup).
+-- If the email is not in the allowlist, the user row is deleted so
+-- the freshly created session becomes invalid.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -50,7 +69,6 @@ begin
     values (new.id, allowed_role, lower(new.email))
     on conflict (id) do nothing;
   else
-    -- Email tidak ada di allowlist -> hapus user supaya session invalid.
     delete from auth.users where id = new.id;
   end if;
 
@@ -64,7 +82,9 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ---------- RPC: get_link_by_code ----------
--- Satu-satunya jalan anon client membaca tabel links (anti enumerasi).
+-- The only way an anon client reads the links table (anti-enumeration).
+-- Case-insensitive: public-site lowercases the URL fragment, but legacy
+-- codes may be mixed-case.
 create or replace function public.get_link_by_code(p_code text)
 returns table (
   id uuid,
@@ -83,7 +103,12 @@ as $$
    limit 1;
 $$;
 
--- Increment hit counter (dipanggil dari frontend setelah redirect).
+grant execute on function public.get_link_by_code(text) to anon, authenticated;
+
+-- ---------- RPC: increment_click_count ----------
+-- Called from the public site after a redirect. Note: exposed to anon,
+-- so anyone can inflate click counts; without a backend, rate limiting
+-- is not enforced (see security audit note M3).
 create or replace function public.increment_click_count(p_code text)
 returns void
 language sql
@@ -95,12 +120,17 @@ as $$
    where lower(code) = lower(p_code);
 $$;
 
+grant execute on function public.increment_click_count(text) to anon, authenticated;
+
 -- ---------- RPC: sync_profile_for_current_user ----------
--- Dipanggil admin-panel setelah login. Membuat/menyinkronkan baris profiles
--- untuk user yang sedang login kalau emailnya ada di allowed_emails.
--- Mengatasi kasus user auth.users yang dibuat sebelum trigger allowlist
--- terpasang (atau sebelum email ditambahkan ke allowlist) sehingga tidak
--- punya baris profiles.
+-- Called by the admin panel after login. Creates/syncs the profiles row
+-- for the current user when their email is in the allowlist. Also covers
+-- users created before the allowlist trigger existed (or before their
+-- email was allowlisted) that therefore have no profiles row.
+--
+-- On conflict the email is refreshed but the role is preserved, so a
+-- promotion/demotion made from the dashboard is not overwritten on the
+-- next login.
 create or replace function public.sync_profile_for_current_user()
 returns public.profiles
 language plpgsql
@@ -124,7 +154,7 @@ begin
     from public.allowed_emails
    where email = v_email;
 
-  -- Email tidak ada di allowlist -> bukan user yang sah.
+  -- Email not in allowlist -> not a valid user.
   if v_role is null then
     return null;
   end if;
@@ -141,8 +171,8 @@ $$;
 grant execute on function public.sync_profile_for_current_user() to authenticated;
 
 -- ---------- Helper: is_admin ----------
--- Dipakai oleh RLS policies. SECURITY DEFINER supaya query ke profiles
--- melewati RLS dan tidak memicu infinite recursion policy.
+-- Used by the RLS policies. SECURITY DEFINER so the query on profiles
+-- bypasses RLS and does not trigger infinite policy recursion.
 create or replace function public.is_admin()
 returns boolean
 language sql

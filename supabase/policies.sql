@@ -1,20 +1,21 @@
 -- ============================================================
 -- shortic — RLS policies
+--
 -- Run AFTER schema.sql (as postgres/service role).
--- Idempotent: bisa dijalankan ulang (drop policy if exists).
+-- Idempotent: safe to re-run (drop policy if exists).
 -- ============================================================
 
 alter table public.links enable row level security;
 alter table public.profiles enable row level security;
 alter table public.allowed_emails enable row level security;
 
--- Anon TIDAK dapat SELECT langsung ke links. Satu-satunya akses lewat
--- function SECURITY DEFINER get_link_by_code / increment_click_count.
--- (function dijalankan dengan hak owner, bukan anon, sehingga bisa
---  melewati RLS untuk query yang sudah dibatasi di dalamnya.)
+-- Anon gets NO direct SELECT on links. Its only access is through the
+-- SECURITY DEFINER functions get_link_by_code / increment_click_count
+-- (defined in schema.sql), which run with the owner's privileges and
+-- are constrained internally.
 
--- Helper is_admin() (didefinisikan di schema.sql) dipakai untuk cek role
--- admin. Ia SECURITY DEFINER sehingga tidak memicu infinite recursion RLS.
+-- The helper is_admin() (defined in schema.sql) is used for role checks.
+-- It is SECURITY DEFINER so it does not trigger infinite RLS recursion.
 
 -- ---------- links ----------
 drop policy if exists "links_select_owner_or_admin" on public.links;
@@ -87,11 +88,9 @@ create policy "allowed_emails_admin_delete"
   using (public.is_admin());
 
 -- ---------- revoke anon table access (defense in depth) ----------
--- Role anon TIDAK boleh akses tabel links/allowed_emails langsung.
--- Akses ke links untuk anon hanya lewat fungsi SECURITY DEFINER di atas.
--- Catatan: role authenticated TIDAK dicabut, karena RLS sudah membatasi
--- (admin dashboard butuh akses via authenticated untuk CRUD).
+-- The anon role must not access links/allowed_emails directly; anon
+-- access to links is only via the SECURITY DEFINER functions above.
+-- Note: the authenticated role is intentionally NOT revoked, because RLS
+-- already restricts it (the admin dashboard needs CRUD via authenticated).
 revoke all on table public.links from anon;
 revoke all on table public.allowed_emails from anon;
-grant execute on function public.get_link_by_code(text) to anon, authenticated;
-grant execute on function public.increment_click_count(text) to anon, authenticated;

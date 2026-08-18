@@ -1,8 +1,9 @@
 -- ============================================================
--- shortic — seed data (opsional)
--- Isi email admin pertama supaya trigger allowlist punya target.
+-- shortic — seed data (optional)
+--
+-- Insert the first admin email so the allowlist trigger has a target.
 -- ============================================================
 
--- Ganti dengan email kamu sebelum menjalankan.
+-- Replace with your own email before running.
 insert into public.allowed_emails (email, role)
 values ('admin@contoh.com', 'admin');
