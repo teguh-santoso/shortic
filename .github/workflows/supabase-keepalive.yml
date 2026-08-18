@@ -18,9 +18,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          curl -fsS \
+          # Gunakan RPC get_link_by_code (grant EXECUTE ke anon, SECURITY DEFINER).
+          # Query tabel links langsung tidak dipakai karena hak anon ke tabel
+          # sudah dicabut untuk mencegah enumerasi.
+          curl -fsS -X POST \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-            "${SUPABASE_URL}/rest/v1/links?select=id&limit=1" \
+            -H "Content-Type: application/json" \
+            -d '{"p_code":"__keepalive__"}' \
+            "${SUPABASE_URL}/rest/v1/rpc/get_link_by_code" \
             -o /dev/null
           echo "Supabase pinged successfully."
