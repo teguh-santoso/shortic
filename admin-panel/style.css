@@ -1,7 +1,7 @@
 /* ============================================================
    shortic admin — flat design + dark mode toggle
-   Materialize CSS dimuat via <link> di HTML; file ini adalah
-   override agar tampil flat, responsif, dan mengikuti tema.
+   Materialize CSS is loaded via <link> in the HTML; this file is
+   an override to make it flat, responsive, and theme-aware.
    ============================================================ */
 
 :root {
@@ -317,7 +317,7 @@ select {
   background-repeat: no-repeat;
 }
 
-/* Form row inline (bukan grid Materialize) */
+/* Form row inline (not Materialize grid) */
 .inline-row {
   display: flex;
   gap: 1rem;
@@ -331,7 +331,7 @@ select {
   min-width: 160px;
 }
 
-/* Materialize grid: rapikan margin bawaan agar tidak berantakan */
+/* Materialize grid: tidy default margins to avoid clutter */
 .row {
   margin-bottom: 0;
 }
@@ -661,8 +661,8 @@ code {
   }
 }
 
-/* Mobile: daftar link hanya kolom utama (Kode, Clicks, Aksi),
-   sisanya lewat tombol detail. */
+/* Mobile: links table shows only the main columns (Code, Clicks, Actions),
+   the rest is available via the detail button. */
 @media (max-width: 767px) {
   #links-table .hide-sm {
     display: none;

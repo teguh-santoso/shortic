@@ -36,7 +36,7 @@ async function guard() {
   }
 
   if (!profile) {
-    // Email tidak ada di allowlist: session dibuat tapi tidak diizinkan.
+    // Email not in allowlist: session was created but is not permitted.
     showDenied();
     await sb.auth.signOut({ scope: "local" });
     return;
@@ -71,7 +71,7 @@ function bindGlobalActions() {
         options: { redirectTo: window.location.origin + "/dashboard.html" },
       });
       if (error) {
-        msg.textContent = "Gagal memulai login: " + error.message;
+        msg.textContent = "Failed to start login: " + error.message;
         msg.classList.remove("hidden");
       }
     });

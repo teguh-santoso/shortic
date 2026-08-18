@@ -33,14 +33,14 @@ async function init() {
   if (!link) return;
 
   if (!isValidTarget(link.target_url)) {
-    console.error("Target URL tidak valid:", link.target_url);
+    console.error("Invalid target URL:", link.target_url);
     return;
   }
 
   try {
     await sb.rpc("increment_click_count", { p_code: code });
   } catch (err) {
-    console.error("Gagal menambah click count:", err.message);
+    console.error("Failed to increment click count:", err.message);
   }
   window.location.replace(link.target_url);
 }

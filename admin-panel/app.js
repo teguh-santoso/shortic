@@ -64,7 +64,7 @@ async function copyToClipboard(text) {
 
 function formatDate(iso) {
   if (!iso) return "-";
-  return new Date(iso).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+  return new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 }
 
 function showToast(message) {
@@ -86,12 +86,12 @@ function spinIcon(id) {
 
 async function createLink(targetUrl, code) {
   if (!isValidHttpUrl(targetUrl)) {
-    return { ok: false, error: { message: "URL tujuan harus diawali http:// atau https://" } };
+    return { ok: false, error: { message: "Destination URL must start with http:// or https://" } };
   }
   if (code && !/^[a-z0-9]{6,}$/.test(code)) {
-    return { ok: false, error: { message: "Kode pendek harus 6+ karakter alfanumerik (a-z, 0-9)" } };
+    return { ok: false, error: { message: "Short code must be 6+ alphanumeric characters (a-z, 0-9)" } };
   }
-  // Coba insert; kalau unique violation (kode sudah dipakai), retry dengan kode baru.
+  // Try insert; on unique violation (code already taken), retry with a new code.
   for (let attempt = 0; attempt < 5; attempt++) {
     const candidate = code || randomCode();
     const { data, error } = await sb
@@ -102,12 +102,12 @@ async function createLink(targetUrl, code) {
 
     if (!error) return { ok: true, code: candidate };
     if (error.code === "23505") {
-      code = null; // retry dengan kode acak baru
+      code = null; // retry with a new random code
       continue;
     }
     return { ok: false, error };
   }
-  return { ok: false, error: { message: "Gagal mendapat kode unik, coba lagi." } };
+  return { ok: false, error: { message: "Failed to get a unique code, try again." } };
 }
 
 const PAGE_SIZE = 10;
@@ -162,7 +162,7 @@ function renderLinks(data) {
 
   for (const link of data) {
     const tr = document.createElement("tr");
-    const owner = window.APP_USER.role === "admin" && link.owner_id !== window.APP_USER.id ? link.owner_id.slice(0, 8) : "Anda";
+    const owner = window.APP_USER.role === "admin" && link.owner_id !== window.APP_USER.id ? link.owner_id.slice(0, 8) : "You";
     tr.innerHTML = `
       <td><code>${escapeHtml(link.code)}</code></td>
       <td class="hide-sm"><div class="url-cell"><a href="${escapeHtml(link.target_url)}" target="_blank" rel="noopener" title="${escapeHtml(link.target_url)}">${escapeHtml(shortPreview(link.target_url))}</a></div></td>
@@ -170,11 +170,11 @@ function renderLinks(data) {
       <td class="hide-sm">${formatDate(link.created_at)}</td>
       <td class="hide-sm">${escapeHtml(owner)}</td>
       <td>
-        <button class="btn btn-sm btn-copy" data-code="${escapeHtml(link.code)}" title="Salin tautan pendek"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-        <button class="btn btn-sm btn-detail" data-code="${escapeHtml(link.code)}" data-url="${escapeHtml(link.target_url)}" data-created="${escapeHtml(link.created_at)}" data-owner="${escapeHtml(owner)}" data-clicks="${link.click_count}" title="Lihat detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
-        <button class="btn btn-sm btn-qr" data-code="${escapeHtml(link.code)}" title="Lihat QR"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3z"></path><path d="M18 18h3v3h-3z"></path></svg></button>
+        <button class="btn btn-sm btn-copy" data-code="${escapeHtml(link.code)}" title="Copy short link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+        <button class="btn btn-sm btn-detail" data-code="${escapeHtml(link.code)}" data-url="${escapeHtml(link.target_url)}" data-created="${escapeHtml(link.created_at)}" data-owner="${escapeHtml(owner)}" data-clicks="${link.click_count}" title="View details"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        <button class="btn btn-sm btn-qr" data-code="${escapeHtml(link.code)}" title="View QR"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3z"></path><path d="M18 18h3v3h-3z"></path></svg></button>
         <button class="btn btn-sm btn-edit" data-id="${link.id}" data-code="${escapeHtml(link.code)}" data-url="${escapeHtml(link.target_url)}">Edit</button>
-        <button class="btn btn-sm btn-danger btn-delete" data-id="${link.id}">Hapus</button>
+        <button class="btn btn-sm btn-danger btn-delete" data-id="${link.id}">Delete</button>
       </td>`;
     tbody.appendChild(tr);
   }
@@ -193,7 +193,7 @@ function renderPagination() {
 
   const from = (linksState.page - 1) * PAGE_SIZE + 1;
   const to = Math.min(linksState.page * PAGE_SIZE, linksState.total);
-  el("page-info").textContent = `Menampilkan ${from}–${to} dari ${linksState.total} · Hal ${linksState.page}/${totalPages}`;
+  el("page-info").textContent = `Showing ${from}–${to} of ${linksState.total} · Page ${linksState.page}/${totalPages}`;
   el("prev-page").disabled = linksState.page <= 1;
   el("next-page").disabled = linksState.page >= totalPages;
 }
@@ -219,15 +219,15 @@ function bindModal(modalId, closeBtnId) {
 
 function openDetailModal(d) {
   el("detail-body").innerHTML = `
-    <dt>Kode</dt><dd><code>${escapeHtml(d.code)}</code></dd>
-    <dt>URL tujuan</dt>
+    <dt>Code</dt><dd><code>${escapeHtml(d.code)}</code></dd>
+    <dt>Destination URL</dt>
     <dd class="detail-url">
       <a href="${escapeHtml(d.url)}" target="_blank" rel="noopener">${escapeHtml(d.url)}</a>
-      <button class="btn btn-sm btn-copy" data-copy="${escapeHtml(d.url)}" title="Salin URL"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+      <button class="btn btn-sm btn-copy" data-copy="${escapeHtml(d.url)}" title="Copy URL"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
     </dd>
-    <dt>Pemilik</dt><dd>${escapeHtml(d.owner)}</dd>
-    <dt>Dibuat</dt><dd>${escapeHtml(d.created)}</dd>
-    <dt>Klik</dt><dd>${escapeHtml(d.clicks)}</dd>`;
+    <dt>Owner</dt><dd>${escapeHtml(d.owner)}</dd>
+    <dt>Created</dt><dd>${escapeHtml(d.created)}</dd>
+    <dt>Clicks</dt><dd>${escapeHtml(d.clicks)}</dd>`;
   openModal("detail-modal");
 }
 
@@ -238,7 +238,7 @@ function renderQR(code) {
   el("qr-url").textContent = url;
   el("qr-download").dataset.code = code;
   if (typeof QRCode === "undefined") {
-    el("qr-url").textContent = url + " (library QR belum dimuat)";
+    el("qr-url").textContent = url + " (QR library not loaded yet)";
     return;
   }
   new QRCode(container, { text: url, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.H });
@@ -267,11 +267,11 @@ async function loadProfiles() {
     const tr = document.createElement("tr");
     const isSelf = profile.id === window.APP_USER.id;
     tr.innerHTML = `
-      <td>${escapeHtml(profile.email)} ${isSelf ? "(Anda)" : ""}</td>
+      <td>${escapeHtml(profile.email)} ${isSelf ? "(You)" : ""}</td>
       <td>${escapeHtml(profile.role)}</td>
       <td>
         <button class="btn btn-sm" data-action="role" data-id="${profile.id}" data-email="${escapeHtml(profile.email)}" data-role="${profile.role === "admin" ? "user" : "admin"}" ${isSelf ? "disabled" : ""}>
-          ${profile.role === "admin" ? "Turunkan ke user" : "Naikkan ke admin"}
+          ${profile.role === "admin" ? "Demote to user" : "Promote to admin"}
         </button>
       </td>`;
     tbody.appendChild(tr);
@@ -293,7 +293,7 @@ async function loadAllowlist() {
     tr.innerHTML = `
       <td>${escapeHtml(entry.email)}</td>
       <td>${escapeHtml(entry.role)}</td>
-      <td><button class="btn btn-sm btn-danger" data-action="allow-delete" data-email="${escapeHtml(entry.email)}">Hapus</button></td>`;
+      <td><button class="btn btn-sm btn-danger" data-action="allow-delete" data-email="${escapeHtml(entry.email)}">Remove</button></td>`;
     tbody.appendChild(tr);
   }
 }
@@ -317,13 +317,13 @@ async function initDashboard() {
       if (result.ok) {
         el("target-url").value = "";
         el("custom-code").value = "";
-        msg.textContent = `Link dibuat: ${getShortUrl(result.code)}`;
+        msg.textContent = `Link created: ${getShortUrl(result.code)}`;
         msg.classList.add("text-success");
         msg.classList.remove("hidden");
-        showToast("Link berhasil dibuat");
+        showToast("Link created successfully");
         await fetchLinks();
       } else {
-        msg.textContent = "Gagal membuat link: " + result.error.message;
+        msg.textContent = "Failed to create link: " + result.error.message;
         msg.classList.add("text-danger");
         msg.classList.remove("hidden");
       }
@@ -369,7 +369,7 @@ async function initDashboard() {
     if (copyBtn) {
       const text = copyBtn.dataset.copy || getShortUrl(copyBtn.dataset.code);
       await copyToClipboard(text);
-      showToast("Disalin: " + text);
+      showToast("Copied: " + text);
       return;
     }
     if (detailBtn) {
@@ -382,24 +382,24 @@ async function initDashboard() {
       return;
     }
     if (editBtn) {
-      const url = prompt("URL tujuan baru:", editBtn.dataset.url);
+      const url = prompt("New destination URL:", editBtn.dataset.url);
       if (url === null) return;
       const trimmed = url.trim();
       if (!isValidHttpUrl(trimmed)) {
-        alert("URL tujuan harus diawali http:// atau https://");
+        alert("Destination URL must start with http:// or https://");
         return;
       }
       const { error } = await sb
         .from("links")
         .update({ target_url: trimmed })
         .eq("id", editBtn.dataset.id);
-      if (error) alert("Gagal update: " + error.message);
+      if (error) alert("Update failed: " + error.message);
       await fetchLinks();
     }
     if (deleteBtn) {
-      if (!confirm("Hapus link ini?")) return;
+      if (!confirm("Delete this link?")) return;
       const { error } = await sb.from("links").delete().eq("id", deleteBtn.dataset.id);
-      if (error) alert("Gagal hapus: " + error.message);
+      if (error) alert("Delete failed: " + error.message);
       await fetchLinks();
     }
   });
@@ -411,13 +411,13 @@ async function initDashboard() {
     const copyBtn = e.target.closest(".btn-copy");
     if (!copyBtn) return;
     await copyToClipboard(copyBtn.dataset.copy);
-    showToast("URL disalin");
+    showToast("URL copied");
   });
 
   el("qr-copy").addEventListener("click", async () => {
     const url = el("qr-url").textContent;
     await copyToClipboard(url);
-    showToast("Tautan disalin: " + url);
+    showToast("Link copied: " + url);
   });
 
   el("qr-download").addEventListener("click", () => {
@@ -439,9 +439,9 @@ async function initDashboard() {
         .from("profiles")
         .update({ role: btn.dataset.role })
         .eq("id", btn.dataset.id);
-      if (error) alert("Gagal ubah role: " + error.message);
+      if (error) alert("Failed to change role: " + error.message);
       else {
-        // Sinkronkan role di allowlist supaya tetap konsisten (dipakai saat signup/readd).
+        // Sync the role in the allowlist so it stays consistent (used at signup/re-add).
         await sb
           .from("allowed_emails")
           .update({ role: btn.dataset.role })
@@ -459,11 +459,11 @@ async function initDashboard() {
 
       const { error } = await sb.from("allowed_emails").insert({ email, role });
       if (error) {
-        msg.textContent = "Gagal menambah: " + error.message;
+        msg.textContent = "Failed to add: " + error.message;
         msg.classList.add("text-danger");
       } else {
         el("allow-email").value = "";
-        msg.textContent = "Email ditambahkan ke allowlist.";
+        msg.textContent = "Email added to allowlist.";
         msg.classList.add("text-success");
         await loadAllowlist();
       }
@@ -473,11 +473,11 @@ async function initDashboard() {
     el("allowlist-tbody").addEventListener("click", async (e) => {
       const btn = e.target.closest("[data-action='allow-delete']");
       if (!btn) return;
-      if (!confirm(`Hapus ${btn.dataset.email} dari allowlist?`)) return;
+      if (!confirm(`Remove ${btn.dataset.email} from the allowlist?`)) return;
       const { error } = await sb.from("allowed_emails").delete().eq("email", btn.dataset.email);
-      if (error) alert("Gagal hapus: " + error.message);
+      if (error) alert("Remove failed: " + error.message);
       else {
-        // Revoke penuh: hapus profile supaya role (termasuk admin) ikut dicabut.
+        // Full revoke: delete the profile so the role (including admin) is also removed.
         await sb.from("profiles").delete().eq("email", btn.dataset.email);
       }
       await loadAllowlist();

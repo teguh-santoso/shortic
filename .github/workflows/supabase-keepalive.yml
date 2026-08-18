@@ -2,7 +2,7 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # Harian 00:00 UTC, cukup untuk mencegah pause karena 7 hari inactivity.
+    # Daily 00:00 UTC, enough to prevent pausing due to 7 days of inactivity.
     - cron: "0 0 * * *"
   workflow_dispatch:
 
@@ -18,9 +18,9 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          # Gunakan RPC get_link_by_code (grant EXECUTE ke anon, SECURITY DEFINER).
-          # Query tabel links langsung tidak dipakai karena hak anon ke tabel
-          # sudah dicabut untuk mencegah enumerasi.
+          # Use the get_link_by_code RPC (EXECUTE granted to anon, SECURITY DEFINER).
+          # A direct query on the links table is not used because anon access
+          # to the table was revoked to prevent enumeration.
           curl -fsS -X POST \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
