@@ -23,6 +23,7 @@
 
 - **No backend server** — everything is static HTML/CSS/JS hosted on Cloudflare Pages. No Node server, no Worker (unless you want to add one).
 - **Fragment-based short links** — `https://example.com/#abc123` redirects to the target URL client-side.
+- **Generic Open Graph preview** — sharing any short link on WhatsApp/Facebook/X shows a shortic-branded card (static `og:image`). Per-link previews are not possible with fragment-based URLs on pure static hosting; see [Open Graph preview](#open-graph-preview).
 - **Google OAuth login** with a database-level **allowlist** enforced by a Postgres trigger — rejected users are deleted from `auth.users` automatically.
 - **Admin panel** (`admin.example.com`):
   - Create / edit / delete links with auto-generated random codes (or custom codes).
@@ -192,11 +193,11 @@ Create **two separate Pages projects** from this repository.
 
 ### Project 1 — `shortener` (public site → `example.com`)
 
-| Setting                | Value                                            |
-|------------------------|--------------------------------------------------|
-| Root directory         | *(leave empty — repo root)*                      |
-| Build command          | `node scripts/generate-config.js public-site`    |
-| Build output directory | `public-site`                                    |
+| Setting                | Value                                                              |
+|------------------------|--------------------------------------------------------------------|
+| Root directory         | *(leave empty — repo root)*                                        |
+| Build command          | `node scripts/generate-config.js public-site && node scripts/inject-og.js public-site` |
+| Build output directory | `public-site`                                                      |
 
 ### Project 2 — `shortener-admin` (admin → `admin.example.com`)
 
@@ -217,6 +218,7 @@ Set these in **Settings → Environment variables** of each project:
 | `SUPABASE_URL`     | ✅          | ✅          | Your Supabase Project URL                     |
 | `SUPABASE_ANON_KEY`| ✅          | ✅          | Your Supabase anon public key                 |
 | `PUBLIC_BASE_URL`  | —           | ✅          | Public base URL for short links, e.g. `https://example.com` |
+| `SITE_URL`         | ✅          | —           | Public site URL (optional) — injected into the Open Graph meta tags as absolute URLs |
 
 > When deploying via **Direct Upload**, upload the local folder directly — `config.js` is included because it exists locally. Make sure it is filled in before uploading.
 
@@ -267,6 +269,19 @@ Run it manually once from the **Actions** tab to verify (the log should show `Su
 | Keep-alive fails with HTTP 401                                       | Stale/incorrect `SUPABASE_ANON_KEY` in GitHub Secrets. Re-copy the current anon key from Supabase → Settings → API.    |
 | `Identifier 'supabase' has already been declared`                    | Old cached scripts. Hard refresh (Ctrl+Shift+R) — the current code names the client `sb` to avoid the CDN global.      |
 | Short link shows the logo but never redirects                        | Check the browser console. Usually a missing/invalid `config.js` or the RPC not existing in your Supabase project.     |
+
+## Open Graph preview
+
+The public landing page ships static Open Graph / Twitter meta tags (`og:title`, `og:description`, `og:image`, `twitter:card`) so that sharing a short link like `https://example.com/#abc123` shows a **shortic-branded card** (`assets/og-preview.png`) on WhatsApp, Facebook, X, Telegram, etc.
+
+**Why the preview is generic (not per-link):**
+
+- The fragment (`#code`) is never sent to the server, and social crawlers do not execute JavaScript, so a pure-static host cannot know which link is being requested.
+- Social platforms do not support SVG as `og:image`, so the branded card is a pre-rendered PNG (1200×630).
+
+If you want per-link previews, you would need to relax one constraint (e.g., path-based URLs `/code`, or a small Pages Function). This project intentionally keeps the fragment format on pure static hosting.
+
+To make `og:image` / `og:url` absolute (required by some scrapers), set the `SITE_URL` environment variable on the public-site Pages project (e.g. `https://example.com`); `scripts/inject-og.js` replaces the `__SITE_URL__` placeholder during the build. If it is not set, relative URLs are used as a fallback.
 
 ## Limitations & Roadmap
 

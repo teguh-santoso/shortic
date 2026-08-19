@@ -23,6 +23,7 @@
 
 - **Tanpa backend server** — semuanya HTML/CSS/JS statis di Cloudflare Pages. Tidak ada server Node, tidak ada Worker.
 - **Tautan pendek berbasis fragment** — `https://contoh.com/#abc123` dialihkan ke URL tujuan secara client-side.
+- **Preview Open Graph generik** — berbagi tautan pendek apa pun di WhatsApp/Facebook/X menampilkan kartu bermerek shortic (`og:image` statis). Preview per-link tidak mungkin dengan URL berbasis fragment di hosting statis murni; lihat [Preview Open Graph](#preview-open-graph).
 - **Login Google OAuth** dengan **allowlist** yang ditegakkan di level database lewat trigger Postgres — user yang emailnya tidak terdaftar otomatis dihapus dari `auth.users`.
 - **Panel admin** (`admin.contoh.com`):
   - Buat / edit / hapus link dengan kode acak otomatis (atau kode kustom).
@@ -192,11 +193,11 @@ Buat **dua project Pages terpisah** dari repository ini.
 
 ### Project 1 — `shortener` (public site → `contoh.com`)
 
-| Pengaturan             | Nilai                                           |
-|------------------------|-------------------------------------------------|
-| Root directory         | *(kosongkan — repo root)*                       |
-| Build command          | `node scripts/generate-config.js public-site`   |
-| Build output directory | `public-site`                                   |
+| Pengaturan             | Nilai                                                                  |
+|------------------------|------------------------------------------------------------------------|
+| Root directory         | *(kosongkan — repo root)*                                              |
+| Build command          | `node scripts/generate-config.js public-site && node scripts/inject-og.js public-site` |
+| Build output directory | `public-site`                                                          |
 
 ### Project 2 — `shortener-admin` (admin → `admin.contoh.com`)
 
@@ -217,6 +218,7 @@ Set di **Settings → Environment variables** tiap project:
 | `SUPABASE_URL`      | ✅          | ✅          | Project URL Supabase                        |
 | `SUPABASE_ANON_KEY` | ✅          | ✅          | Kunci anon public Supabase                  |
 | `PUBLIC_BASE_URL`   | —           | ✅          | Base URL publik untuk tautan pendek, mis. `https://contoh.com` |
+| `SITE_URL`          | ✅          | —           | URL situs publik (opsional) — di-inject ke tag meta Open Graph sebagai URL absolut |
 
 > Saat deploy via **Direct Upload**, upload folder lokal langsung — `config.js` ikut karena ada di lokal. Pastikan sudah terisi sebelum upload.
 
@@ -267,6 +269,19 @@ Jalankan sekali secara manual dari tab **Actions** untuk verifikasi (log harus m
 | Keep-alive gagal dengan HTTP 401                                   | `SUPABASE_ANON_KEY` di GitHub Secrets stale/salah. Salin ulang anon key dari Supabase → Settings → API.            |
 | `Identifier 'supabase' has already been declared`                  | Cache script lama. Hard refresh (Ctrl+Shift+R) — kode sekarang menamai client `sb` untuk menghindari global CDN.    |
 | Tautan pendek menampilkan logo tapi tidak redirect                 | Cek console browser. Biasanya `config.js` tidak ada/salah atau RPC belum ada di project Supabase.                 |
+
+## Preview Open Graph
+
+Halaman landing publik menyertakan meta Open Graph / Twitter statis (`og:title`, `og:description`, `og:image`, `twitter:card`) sehingga berbagi tautan pendek seperti `https://contoh.com/#abc123` menampilkan **kartu bermerek shortic** (`assets/og-preview.png`) di WhatsApp, Facebook, X, Telegram, dll.
+
+**Kenapa preview-nya generik (bukan per-link):**
+
+- Fragment (`#code`) tidak pernah dikirim ke server, dan crawler sosial tidak menjalankan JavaScript, jadi host statis murni tidak bisa tahu link mana yang diminta.
+- Platform sosial tidak mendukung SVG sebagai `og:image`, jadi kartu bermerek dibuat sebagai PNG pra-render (1200×630).
+
+Jika ingin preview per-link, salah satu kendala harus direlakskan (mis. URL berbasis path `/kode`, atau satu Pages Function kecil). Project ini sengaja mempertahankan format fragment di hosting statis murni.
+
+Supaya `og:image` / `og:url` absolut (diwajibkan sebagian scraper), set environment variable `SITE_URL` di project public-site (mis. `https://contoh.com`); `scripts/inject-og.js` mengganti placeholder `__SITE_URL__` saat build. Jika tidak di-set, URL relatif dipakai sebagai fallback.
 
 ## Batasan & Roadmap
 
